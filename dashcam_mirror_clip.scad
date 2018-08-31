@@ -4,21 +4,21 @@
 
 // TODO: Set actual measurements
 
-mirrorPostDia=24;
+mirrorPostDia=23;
 mirrorClipWidth=25;
 mirrorClipThickness=3;
 mirrorClipBlockHeight=9;
 
 clampHingeBaseWidth=17;
-clampHingeGapWidth=9;
+clampHingeGapWidth=10;
 clampHingeAxleHeight=12;
 clampHingeAxleOuterDia=12;
 clampHingeThicknessScrewSide=3;
 clampHingeThicnessNutSide=3;
-clampHingeAxleInnerDia=4.2;
-clampHingeNutInsetDia=9;
+clampHingeAxleInnerDia=5;
+clampHingeNutInsetDia=8.5;
 
-screwSideFlangeThickness=3.5;
+screwSideFlangeThickness=3;
 nutSideFlangeThickness=2;
 
 
@@ -30,8 +30,8 @@ $fn=50;
 
 union() {
     postClip(mirrorPostDia, mirrorClipWidth, mirrorClipThickness, mirrorClipBlockHeight);
-    hingeCenterOffset=mirrorClipWidth/2-clampHingeOverallWidth/2;
-    translate([0,mirrorPostDia/2+mirrorClipBlockHeight-overlap,hingeCenterOffset])
+    hingePositionOffset=screwSideFlangeThickness;  // Align with print bed
+    translate([0,mirrorPostDia/2+mirrorClipBlockHeight-overlap,hingePositionOffset])
         rotate([0,0,90])
             clampHinge(clampHingeBaseWidth,clampHingeGapWidth,clampHingeAxleHeight,
                 clampHingeAxleOuterDia,clampHingeThicknessScrewSide,
@@ -106,20 +106,29 @@ module postClip(postDia, clipWidth, thickness, blockHeight) {
         translate([0,0,-overlap])
             cylinder(d=postDia, h=clipWidth+overlap*2);
         // side opening
-        translate([0,-postDia/2,-overlap])
-            cylinder(d=postDia, h=clipWidth+overlap*2, $fn=6);
+        translate([0,-postDia*3/4,-overlap])
+            cylinder(d=postDia*1.5, h=clipWidth+overlap*2, $fn=6);
         // tie-wrap cut 1
-        translate([0,0,clipWidth/5])
-            difference() {
-                cylinder(d=postDia+thickness*2+tieWrapThickness*2, h=tieWrapWidth);
-                cylinder(d=postDia+thickness*2, h=tieWrapWidth);
-            }
+        translate([0,0,clipWidth/5]) 
+            tieWrapCut(postDia, thickness, tieWrapThickness, tieWrapWidth);
         // tie-wrap cut 2
         translate([0,0,clipWidth*3/5])
-            difference() {
-                cylinder(d=postDia+thickness*2+tieWrapThickness*2, h=tieWrapWidth);
-                cylinder(d=postDia+thickness*2, h=tieWrapWidth);
-            }
-            
+            tieWrapCut(postDia, thickness, tieWrapThickness, tieWrapWidth);
+    }
+}
+
+module tieWrapCut(postDia, thickness, tieWrapThickness, tieWrapWidth) {
+    cutOuterDia=postDia+thickness*2+tieWrapThickness*2;
+    difference() {
+        cylinder(d=cutOuterDia, h=tieWrapWidth);
+        translate([0,0,-overlap])
+            cylinder(d=postDia+thickness*2, h=tieWrapWidth+overlap*2);
+    }
+    difference() {
+        cylinder(d=postDia+thickness*2+tieWrapThickness*2, h=tieWrapWidth);
+        translate([-cutOuterDia/2-overlap,tieWrapThickness,-overlap])
+            cube([cutOuterDia+overlap*2,cutOuterDia,tieWrapWidth+overlap*2]);
+        translate([0,tieWrapThickness,-overlap])
+            cylinder(d=postDia+thickness*2, h=tieWrapWidth+overlap*2);
     }
 }
