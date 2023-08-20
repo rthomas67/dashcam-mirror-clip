@@ -10,38 +10,41 @@ mirrorClipThickness=3;
 mirrorClipBlockHeight=9;
 
 clampHingeBaseWidth=17;
-clampHingeGapWidth=10;
+clampHingeGapWidth=10.5;
 clampHingeAxleHeight=12;
 clampHingeAxleOuterDia=12;
 clampHingeThicknessScrewSide=3;
-clampHingeThicnessNutSide=3;
+clampHingeThicknessNutSide=3;
 clampHingeAxleInnerDia=5;
-clampHingeNutInsetDia=8.5;
+clampHingeNutInsetDia=8.75;
 
 screwSideFlangeThickness=3;
-nutSideFlangeThickness=2;
+nutSideFlangeThickness=2.5;
+
+wedgeAngle=45;
+wedgeHeightLowSide=10;
 
 
 // calculated
-clampHingeOverallWidth=clampHingeGapWidth+clampHingeThicknessScrewSide+clampHingeThicnessNutSide;
+clampHingeOverallWidth=clampHingeGapWidth+clampHingeThicknessScrewSide+clampHingeThicknessNutSide;
+mirrorClipBlockWidth=mirrorClipBlockHeight*2;
 
 overlap=0.01;
 $fn=50;
 
 union() {
-    postClip(mirrorPostDia, mirrorClipWidth, mirrorClipThickness, mirrorClipBlockHeight);
+    postClip(mirrorPostDia, mirrorClipWidth, mirrorClipThickness, mirrorClipBlockHeight, mirrorClipBlockWidth);
     hingePositionOffset=screwSideFlangeThickness;  // Align with print bed
     translate([0,mirrorPostDia/2+mirrorClipBlockHeight-overlap,hingePositionOffset])
         rotate([0,0,90])
             clampHinge(clampHingeBaseWidth,clampHingeGapWidth,clampHingeAxleHeight,
                 clampHingeAxleOuterDia,clampHingeThicknessScrewSide,
-                clampHingeThicnessNutSide,clampHingeAxleInnerDia,
+                clampHingeThicknessNutSide,clampHingeAxleInnerDia,
                 screwSideFlangeThickness,nutSideFlangeThickness,
                 clampHingeNutInsetDia);
+   * wedge(mirrorClipWidth, mirrorClipBlockWidth, wedgeHeightLowSide, wedgeAngle);
 }
 
-// TODO: add Flange and nut inset
-// Note: Taper flange for vertical printing w/o support (i.e. > 45 degrees)
 module clampHinge(baseWidth, gapWidth, axleHeight, axleOuterDia, thicknessScrewSide, 
         thicknessNutSide, axleInnerDia,
         screwSideFlangeThickness, nutSideFlangeThickness,
@@ -90,11 +93,21 @@ module clampHinge(baseWidth, gapWidth, axleHeight, axleOuterDia, thicknessScrewS
     }
 }
 
+// works like an equatorial wedge for a telescope
+module wedge(blockLength, blockWidth, wedgeHeightLowSide, wedgeAngle) {
+    difference() {
+        cube([blockWidth,wedgeHeightLowSide*3,blockLength]);
+   %     translate([-blockWidth,-wedgeHeightLowSide,0])
+            rotate([wedgeAngle,0,-blockLength])
+                cube([blockWidth*3,1,blockLength*3]);
+    }
+}
 
-module postClip(postDia, clipWidth, thickness, blockHeight) {
+
+module postClip(postDia, clipWidth, thickness, blockHeight, blockWidth) {
     tieWrapWidth=6;
     tieWrapThickness=3;
-    blockWidth=blockHeight*2;
+    
     echo("blockWidth calculated as: ", blockWidth);
     difference() {
         union() {
