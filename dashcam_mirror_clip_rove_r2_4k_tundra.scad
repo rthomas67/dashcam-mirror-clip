@@ -20,13 +20,13 @@ clampHingeGapWidth=13;
 clampHingeAxleHeight=22;
 clampHingeAxleOuterDia=11;  // thumbscrew outer dia is 11.6
 clampHingePlateThickness=3;
-clampHingeAxleInnerDia=3;
+clampHingeAxleInnerDia=4;
 //clampHingeNutInsetDia=8.75;
-clampHingeSquareDia=4.5; // This is the diagonal, corner-to-corner
+clampHingeSquareDia=5.2; // This is the diagonal, corner-to-corner
 
 clampHingeDovetailDepth=clampHingePlateThickness;
 clampHingeDovetailThickness=clampHingePlateThickness;
-clampHingeSlotTolerance=0.15;
+clampHingeSlotToleranceEnlargementFactor=1.2;
 
 tieWrapWidth=6;
 tieWrapThickness=3;
@@ -61,17 +61,21 @@ module printPartClip() {
     difference() {
         postClip(mirrorPostDia, mirrorClipWidth, mirrorClipThickness, mirrorClipBlockHeight, mirrorClipBlockWidth);
         // dovetail slot 1
-        translate([clampHingeGapWidth/2,mirrorClipBlockHeight-clampHingeDovetailDepth+overlap,clampHingeBaseWidth/2]) rotate([-90,0,0])
-            clampHingeDovetail(clampHingePlateThickness+clampHingeSlotTolerance, 
+        translate([clampHingeGapWidth/2,mirrorClipBlockHeight
+                -(clampHingeDovetailDepth*clampHingeSlotToleranceEnlargementFactor)+overlap,
+                clampHingeBaseWidth/2]) rotate([-90,0,0])
+            clampHingeDovetail(clampHingePlateThickness, 
                 clampHingeBaseWidth+2, 
                 clampHingeDovetailThickness, 
-                clampHingeDovetailDepth, 0, 0);
+                clampHingeDovetailDepth, clampHingeSlotToleranceEnlargementFactor, 0);
         // dovetail slot 2
-        translate([-clampHingeGapWidth/2,mirrorClipBlockHeight-clampHingeDovetailDepth+overlap,clampHingeBaseWidth/2]) mirror([1,0,0]) rotate([-90,0,0])
-            clampHingeDovetail(clampHingePlateThickness+clampHingeSlotTolerance, 
+        translate([-clampHingeGapWidth/2,mirrorClipBlockHeight
+                -(clampHingeDovetailDepth*clampHingeSlotToleranceEnlargementFactor)+overlap,
+                clampHingeBaseWidth/2]) mirror([1,0,0]) rotate([-90,0,0])
+            clampHingeDovetail(clampHingePlateThickness, 
             clampHingeBaseWidth+2, 
             clampHingeDovetailThickness, 
-            clampHingeDovetailDepth, 0, 0);
+            clampHingeDovetailDepth, clampHingeSlotToleranceEnlargementFactor, 0);
     }
 }
 
@@ -110,7 +114,7 @@ module clampHinge(baseWidth, axleHeight, axleOuterDia, plateThickness,
             }
             // Dovetail insert 
             mirror([1,0,0]) rotate([0,-90,0])
-                clampHingeDovetail(plateThickness, baseWidth, clampHingeDovetailThickness, clampHingeDovetailDepth, 0, 0.073);
+                clampHingeDovetail(plateThickness, baseWidth, clampHingeDovetailThickness, clampHingeDovetailDepth, 1, 0.073);
         }
         // axle cut
         translate([axleHeight,0,-overlap])
@@ -125,17 +129,17 @@ module clampHinge(baseWidth, axleHeight, axleOuterDia, plateThickness,
  * Assembled centered along y-axis, in +x, +z quadrant
  * (overlaps thickness of the plate)
  */
-module clampHingeDovetail(overlapThickness, baseWidth, rootThickness, edgeDepth, enlargementFactor=0, taperFactor) {
+module clampHingeDovetail(overlapThickness, baseWidth, rootThickness, edgeDepth, enlargementFactor=1, taperFactor) {
     translate([0,-baseWidth/2,0])
         hull() {
             // root/base (flat bottom side)
-            cube([overlapThickness+rootThickness,baseWidth,overlap]);
+            cube([(overlapThickness+rootThickness)*enlargementFactor,baseWidth,overlap]);
             // Note: For now, this is narrowed so it won't protrude from the sides of the tapered plate
             // but this should probably be calculated instead of fixed.
             upperRootTrimAmount=baseWidth*taperFactor;
             // flat top side
-            translate([0,upperRootTrimAmount/2,edgeDepth-overlap])
-                cube([overlapThickness,baseWidth-upperRootTrimAmount,overlap]);
+            translate([0,upperRootTrimAmount/2,edgeDepth*enlargementFactor-overlap])
+                cube([overlapThickness*enlargementFactor,baseWidth-upperRootTrimAmount,overlap]);
         }
 }
 
